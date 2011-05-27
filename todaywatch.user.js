@@ -2,7 +2,7 @@
 // @name		Nico today Watch
 // @namespace	http://www.atomer.sakuran.ne.jp
 // @description 自分のウォッチリストで現在時間から２４時間以内に更新したユーザーを強調表示する
-// @include		http://www.nicovideo.jp/my/watchlist*
+// @include		http://www.nicovideo.jp/my/*
 // ==/UserScript==
 (function(window, loaded){
 	var win;
@@ -17,6 +17,25 @@
 	} else {
 		win = unsafeWindow
 	}
+	
+	/**
+	 * nicomoner
+	 * ニコニコのマイページに関する共通的な拡張
+	 */
+	var nicomoner = {
+		VIDEO_PER_HOUR_RANKING: '<a href="http://www.nicovideo.jp/ranking/fav/hourly/all">毎時R</a>|',
+		insertRanking: function() {
+			var nav = document.querySelector("#mainNav");
+			var li = document.createElement("li");
+			li.innerHTML = this.VIDEO_PER_HOUR_RANKING;
+			nav.insertBefore(li, nav.querySelector(".hasSubNav").previousSibling.previousSibling);
+		}
+	};
+	
+	/**
+	 * today Watch
+	 * http://www.nicovideo.jp/my/watchlistを拡張
+	 */
 	var todayWatcher = {};
 	todayWatcher.watchlist = {
 		HOURS_24: 1000 * 60 * 60 * 24,
@@ -116,11 +135,11 @@
 		}
 	};
 	
-	todayWatcher.watchlist.init();
-	/*
+	nicomoner.insertRanking();
+	
 	// trigger
-	var url = win.location.href;
+	var url = window.location.href;
 	var trigger = url.replace(/^http:\/\/www\.nicovideo\.jp\/my\/([^\/#\?]+)(\?|#.*)?$/, "$1");
-	todaywatcher[trigger] && todaywatcher[trigger].init();
-	*/
+	todayWatcher[trigger] && todayWatcher[trigger].init();
+	
 })(window);
