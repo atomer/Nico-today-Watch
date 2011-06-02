@@ -32,6 +32,32 @@
 		}
 	};
 	
+	/*
+	 * レポートタイプの取得
+	 */
+	function getReportType(s) {
+		s = s.replace(/^\s+|\s+$/g, "");
+		if (/^動画.+投稿しました。$/.test(s)) {
+			return "video";
+		} else if (/^イラスト.+投稿しました。$/.test(s)) {
+			return "illust";
+		} else if (/開始しました。$/.test(s)) {
+			return "live";
+		} else if (/マイリスト登録しました。$/.test(s)) {
+			return "mylist";
+		} else if (/取得しました。$/.test(s)) {
+			return "stamp";
+		} else if (/紹介されました。$/.test(s)) {
+			return "intro";
+		} else if (/宣伝しました。$/.test(s)) {
+			return "advert";
+		} else if (/達成しました。$/.test(s)) {
+			return "achiev";
+		} else {
+			return "none";
+		}
+	}
+	
 	/**
 	 * today Watch
 	 * http://www.nicovideo.jp/my/watchlistを拡張
@@ -83,34 +109,12 @@
 				d = new Date(s);
 				if (NOW - d.getTime() < this.HOURS_24) {
 					cap = watchList[i].querySelector(".report > H4 + P");
-					t = this.checkType(cap.textContent);
+					t = getReportType(cap.textContent);
 					watchList[i].style.backgroundColor = this.BG_COLOR[t];
 					day.style.color = "#F33";
 					day.style.fontWeight = "bold";
 					this.addVisitedStyle(cap, t);
 				}
-			}
-		},
-		checkType: function(s) {
-			s = s.replace(/^\s+|\s+$/g, "");
-			if (/^動画.+投稿しました。$/.test(s)) {
-				return "video";
-			} else if (/^イラスト.+投稿しました。$/.test(s)) {
-				return "illust";
-			} else if (/開始しました。$/.test(s)) {
-				return "live";
-			} else if (/マイリスト登録しました。$/.test(s)) {
-				return "mylist";
-			} else if (/取得しました。$/.test(s)) {
-				return "stamp";
-			} else if (/紹介されました。$/.test(s)) {
-				return "intro";
-			} else if (/宣伝しました。$/.test(s)) {
-				return "advert";
-			} else if (/達成しました。$/.test(s)) {
-				return "achiev";
-			} else {
-				return "none";
 			}
 		},
 		addVisitedStyle: function(el, type) {
@@ -135,11 +139,17 @@
 		}
 	};
 	
+	todayWatcher.top = {
+		init: function() {
+		}
+	};
+	
 	nicomoner.insertRanking();
 	
 	// trigger
 	var url = window.location.href;
-	var trigger = url.replace(/^http:\/\/www\.nicovideo\.jp\/my\/([^\/#\?]+)(\?|#.*)?$/, "$1");
+	var trigger = url.replace(/^http:\/\/www\.nicovideo\.jp\/my\/([^\/#\?]*)(\?|#.*)?$/, "$1");
+	!trigger && (trigger = "top");
 	todayWatcher[trigger] && todayWatcher[trigger].init();
 	
 })(window);
