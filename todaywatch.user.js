@@ -31,6 +31,28 @@
 			nav.insertBefore(li, nav.querySelector(".hasSubNav").previousSibling.previousSibling);
 		}
 	};
+
+	var initializer = (function(win) {
+		var trigger = [];
+		var f = win.jQuery.fn.html;
+		win.jQuery.fn.html = function(s) {
+			f.apply(this, arguments);
+			for (var i = 0, n = trigger.length; i < n; i++) {
+			    trigger[i](s);
+			}
+		};
+		return {
+		    setTrigger: function(callback, judge) {
+			trigger.push(function(s) {
+				if (judge) {
+				    judge(s) && callback();
+				} else {
+				    callback();
+				}
+			});
+		    }
+		};
+	})(win);
 	
 	/*
 	 * レポートタイプの取得
@@ -87,14 +109,12 @@
 			document.getElementsByTagName("head")[0].appendChild(style);
 		},
 		_trigger: function() {
-			var that = this;
-			var f = win.jQuery.fn.html;
-			win.jQuery.fn.html = function(s) {
-				f.apply(this, arguments);
-				if (s.indexOf("myContHead") !== -1) {
-					that.em();
-				}
-			};
+		    var that = this;
+		    initializer.setTrigger(function() {
+			that.em();
+		    }, function(s) {
+			return s.indexOf("myContHead") !== -1;
+		    });
 		},
 		em: function() {
 			var watchList = document.querySelectorAll(".myContList > LI");
