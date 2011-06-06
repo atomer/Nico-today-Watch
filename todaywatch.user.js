@@ -37,19 +37,19 @@
 		var f = win.jQuery.fn.html;
 		win.jQuery.fn.html = function(s) {
 			f.apply(this, arguments);
-			for (var i = 0, n = trigger.length; i < n; i++) {
+			for (var i = 0, len = trigger.length; i < len; i++) {
 			    trigger[i](s);
 			}
 		};
 		return {
 		    setTrigger: function(callback, judge) {
-			trigger.push(function(s) {
-				if (judge) {
-				    judge(s) && callback();
-				} else {
-				    callback();
-				}
-			});
+				trigger.push(function(s) {
+					if (judge) {
+						judge(s) && callback();
+					} else {
+						callback();
+					}
+				});
 		    }
 		};
 	})(win);
@@ -110,10 +110,10 @@
 		},
 		_trigger: function() {
 		    var that = this;
-		    initializer.setTrigger(function() {
-			that.em();
+			initializer.setTrigger(function() {
+				that.em();
 		    }, function(s) {
-			return s.indexOf("myContHead") !== -1;
+				return s.indexOf("myContHead") !== -1;
 		    });
 		},
 		em: function() {
@@ -161,25 +161,38 @@
 	
 	todayWatcher.top = {
 	    _labelList: [],
+		_filterBase: null,
 		init: function() {
-		this._trigger();
-		this._getElement();
-		
-		this._refreshFilter();
+			this._trigger();
+			this._getElement();
+			this._filterBase = this._createFilterBase();
+			this._refreshFilter();
 	    },
 		_trigger: function() {
-		initializer.setTrigger();
+			initializer.setTrigger();
 	    },
 		_getElement: function() {
-		this._reportList = document.getElementById("SYS_THREADS");
+			this._reportList = document.getElementById("SYS_THREADS");
 	    },
+		_createFilterBase: function() {
+			var base = document.getElementById("myContBody");
+			var div = document.createElement("ul");
+			base.insertBefore(div, this._reportList);
+			return div;
+		},
 		_refreshFilter: function() {
-		var list = document.querySelectorAll("#SYS_THREADS > LI");
-		var name;		
-		for (var i = 0, len = list.length; i < len; i++) {
-		    name = list[i].querySelector(".userName > A").textContent;
-		    !this._labelList[name] && (this._labelList[name] = true);
-		}
+			var list = document.querySelectorAll("#SYS_THREADS > LI");
+			var name;
+			for (var i = 0, len = list.length; i < len; i++) {
+				name = list[i].querySelector(".userName > A").textContent;
+				!this._labelList[name] && (this._labelList[name] = true);
+			}
+			
+			var list = [];
+			for (var s in this._labelList) {
+				list.push('<li><a href="#">' + s + '</a></li>');
+			}
+			this._filterBase.innerHTML = list.join("");
 	    }
 	};
 	
