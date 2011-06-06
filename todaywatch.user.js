@@ -160,8 +160,27 @@
 	};
 	
 	todayWatcher.top = {
+	    _labelList: [],
 		init: function() {
+		this._trigger();
+		this._getElement();
+		
+		this._refreshFilter();
+	    },
+		_trigger: function() {
+		initializer.setTrigger();
+	    },
+		_getElement: function() {
+		this._reportList = document.getElementById("SYS_THREADS");
+	    },
+		_refreshFilter: function() {
+		var list = document.querySelectorAll("#SYS_THREADS > LI");
+		var name;		
+		for (var i = 0, len = list.length; i < len; i++) {
+		    name = list[i].querySelector(".userName > A").textContent;
+		    !this._labelList[name] && (this._labelList[name] = true);
 		}
+	    }
 	};
 	
 	nicomoner.insertRanking();
