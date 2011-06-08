@@ -36,10 +36,14 @@
 		var trigger = [];
 		var f = win.jQuery.fn.html;
 		win.jQuery.fn.html = function(s) {
+			if (!arguments.length) {
+				return f.apply(this, arguments);
+			}
 			f.apply(this, arguments);
 			for (var i = 0, len = trigger.length; i < len; i++) {
 			    trigger[i](s);
 			}
+			return this;
 		};
 		return {
 		    setTrigger: function(callback, judge) {
@@ -165,7 +169,10 @@
 		init: function() {
 			this._trigger();
 			this._getElement();
+			
 			this._filterBase = this._createFilterBase();
+			this._attachEvent();
+			
 			this._refreshFilter();
 	    },
 		_trigger: function() {
@@ -174,6 +181,15 @@
 		_getElement: function() {
 			this._reportList = document.getElementById("SYS_THREADS");
 	    },
+		_attachEvent: function() {
+			var that = this;
+			this._filterBase.addEventListener("click", function(e) {
+				if (e.target.tagName === "A") {
+					var s = e.target.textContent;
+					that._filter(s);
+				}
+			}, true);
+		},
 		_createFilterBase: function() {
 			var base = document.getElementById("myContBody");
 			var div = document.createElement("ul");
@@ -181,19 +197,34 @@
 			return div;
 		},
 		_refreshFilter: function() {
-			var list = document.querySelectorAll("#SYS_THREADS > LI");
-			var name;
-			for (var i = 0, len = list.length; i < len; i++) {
-				name = list[i].querySelector(".userName > A").textContent;
-				!this._labelList[name] && (this._labelList[name] = true);
-			}
+			var that = this;
+			this._eachItem(function(name, el) {
+				!that._labelList[name] && (that._labelList[name] = true);
+			});
 			
 			var list = [];
 			for (var s in this._labelList) {
-				list.push('<li><a href="#">' + s + '</a></li>');
+				list.push('<li><a role="button">' + s + '</a></li>');
 			}
 			this._filterBase.innerHTML = list.join("");
-	    }
+	    },
+		_filter: function(s) {
+			this._eachItem(function(name, el) {
+				if (name === s) {
+					el.style.display = "block";
+				} else {
+					el.style.display = "none";
+				}
+			});
+		},
+		_eachItem: function(f) {
+			var items = document.querySelectorAll("#SYS_THREADS > LI");
+			var name;
+			for (var i = 0, len = items.length; i < len; i++) {
+				name = items[i].querySelector(".userName > A").textContent;
+				f(name, items[i]);
+			}
+		}
 	};
 	
 	nicomoner.insertRanking();
