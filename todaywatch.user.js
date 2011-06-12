@@ -45,10 +45,14 @@
 			var that = this;
 			var f = win.jQuery.fn.html;
 			win.jQuery.fn.html = function(s) {
+				if (!arguments.length) {
+					return f.apply(this, arguments);
+				}
 				f.apply(this, arguments);
 				if (s.indexOf("myContHead") !== -1) {
 					that.em();
 				}
+				return this;
 			};
 		},
 		em: function() {
