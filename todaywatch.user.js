@@ -2,7 +2,9 @@
 // @name		Nico today Watch
 // @namespace	http://www.atomer.sakuran.ne.jp
 // @description 自分のウォッチリストで現在時間から２４時間以内に更新したユーザーを強調表示する
-// @include		http://www.nicovideo.jp/my/watchlist*
+// @include		http://www.nicovideo.jp/my/
+// @include		http://www.nicovideo.jp/my/top
+// @include		http://www.nicovideo.jp/my/watchlist
 // ==/UserScript==
 (function(window, loaded){
 	var win;
@@ -17,6 +19,53 @@
 	} else {
 		win = unsafeWindow
 	}
+	
+	/**
+	 * nicomoner
+	 * ニコニコのマイページに関する共通的な拡張
+	 */
+	var nicomoner = {
+		VIDEO_PER_HOUR_RANKING: '<a href="http://www.nicovideo.jp/ranking/fav/hourly/all">毎時R</a>|',
+		insertRanking: function() {
+			var nav = document.querySelector("#mainNav");
+			var li = document.createElement("li");
+			li.innerHTML = this.VIDEO_PER_HOUR_RANKING;
+			nav.insertBefore(li, nav.querySelector(".hasSubNav").previousSibling.previousSibling);
+		}
+	};
+
+	var initializer;
+	
+	/*
+	 * レポートタイプの取得
+	 */
+	function getReportType(s) {
+		s = s.replace(/^\s+|\s+$/g, "");
+		if (/^動画.+投稿しました。$/.test(s)) {
+			return "video";
+		} else if (/^イラスト.+投稿しました。$/.test(s)) {
+			return "illust";
+		} else if (/開始しました。$/.test(s)) {
+			return "live";
+		} else if (/マイリスト登録しました。$/.test(s)) {
+			return "mylist";
+		} else if (/取得しました。$/.test(s)) {
+			return "stamp";
+		} else if (/紹介されました。$/.test(s)) {
+			return "intro";
+		} else if (/宣伝しました。$/.test(s)) {
+			return "advert";
+		} else if (/達成しました。$/.test(s)) {
+			return "achiev";
+		} else {
+			return "none";
+		}
+	}
+	
+	/**
+	 * today Watch
+	 * http://www.nicovideo.jp/my/watchlistを拡張
+	 */
 	var todayWatcher = {};
 	todayWatcher.watchlist = {
 		HOURS_24: 1000 * 60 * 60 * 24,
@@ -42,18 +91,12 @@
 			document.getElementsByTagName("head")[0].appendChild(style);
 		},
 		_trigger: function() {
-			var that = this;
-			var f = win.jQuery.fn.html;
-			win.jQuery.fn.html = function(s) {
-				if (!arguments.length) {
-					return f.apply(this, arguments);
-				}
-				f.apply(this, arguments);
-				if (s.indexOf("myContHead") !== -1) {
-					that.em();
-				}
-				return this;
-			};
+		    var that = this;
+			initializer.setTrigger("html", function() {
+				that.em();
+		    }, function(s) {
+				return s.indexOf("myContHead") !== -1;
+		    });
 		},
 		em: function() {
 			var watchList = document.querySelectorAll(".myContList > LI");
@@ -68,34 +111,12 @@
 				d = new Date(s);
 				if (NOW - d.getTime() < this.HOURS_24) {
 					cap = watchList[i].querySelector(".report > H4 + P");
-					t = this.checkType(cap.textContent);
+					t = getReportType(cap.textContent);
 					watchList[i].style.backgroundColor = this.BG_COLOR[t];
 					day.style.color = "#F33";
 					day.style.fontWeight = "bold";
 					this.addVisitedStyle(cap, t);
 				}
-			}
-		},
-		checkType: function(s) {
-			s = s.replace(/^\s+|\s+$/g, "");
-			if (/^動画.+投稿しました。$/.test(s)) {
-				return "video";
-			} else if (/^イラスト.+投稿しました。$/.test(s)) {
-				return "illust";
-			} else if (/開始しました。$/.test(s)) {
-				return "live";
-			} else if (/マイリスト登録しました。$/.test(s)) {
-				return "mylist";
-			} else if (/取得しました。$/.test(s)) {
-				return "stamp";
-			} else if (/紹介されました。$/.test(s)) {
-				return "intro";
-			} else if (/宣伝しました。$/.test(s)) {
-				return "advert";
-			} else if (/達成しました。$/.test(s)) {
-				return "achiev";
-			} else {
-				return "none";
 			}
 		},
 		addVisitedStyle: function(el, type) {
@@ -120,11 +141,132 @@
 		}
 	};
 	
-	todayWatcher.watchlist.init();
-	/*
+	todayWatcher.top = {
+	    _labelList: [],
+		_filterBase: null,
+		_filterName: "",
+		init: function() {
+			this._trigger();
+			this._getElement();
+			
+			this._filterBase = this._createFilterBase();
+			this._attachEvent();
+			
+			this._refreshFilter();
+	    },
+		_trigger: function() {
+			var that = this;
+			initializer.setTrigger("appendTo", function() {
+				that._filter(that._filterName);
+				that._refreshFilter(that._filterName);
+			}, function(s) {
+				if (typeof s === "object" && s.html && s.html().indexOf("SYS_TH_RES_POST_") !== -1) {
+					return true;
+				}
+				return false;
+			});
+	    },
+		_getElement: function() {
+			this._reportList = document.getElementById("SYS_THREADS");
+	    },
+		_attachEvent: function() {
+			var that = this;
+			this._filterBase.addEventListener("change", function(e) {
+				var s = that._filterBase.options[that._filterBase.selectedIndex].value;
+				that._filterName = s;
+				that._filter(s);
+				that._filterBase.blur();
+			}, true);
+		},
+		_createFilterBase: function() {
+			var base = document.getElementById("myContBody");
+			var div = document.createElement("div");
+			div.style.textAlign = "right";
+			div.id = "todaywatch_nicorepo_filter";
+			div.innerHTML = '<span>フィルター：</span>';
+			var select = document.createElement("select");
+			div.appendChild(select);
+			base.insertBefore(div, this._reportList);
+			return select;
+		},
+		_refreshFilter: function(defName) {
+			var that = this;
+			this._eachItem(function(name, el) {
+				!that._labelList[name] && (that._labelList[name] = true);
+			});
+			
+			var list = ['<option value="">フィルター無し</option>'];
+			for (var s in this._labelList) {
+				if (this._labelList.hasOwnProperty(s)) {
+					list.push('<option value="' + s + '"' + (defName === s ? ' selected' : '') + '>' + s + '</option>');
+				}
+			}
+			this._filterBase.innerHTML = list.join("");
+	    },
+		_filter: function(s) {
+			this._eachItem(function(name, el) {
+				if (name === s || s === "") {
+					el.style.display = "block";
+				} else {
+					el.style.display = "none";
+				}
+			});
+		},
+		_eachItem: function(f) {
+			var items = document.querySelectorAll("#SYS_THREADS > LI");
+			var name;
+			for (var i = 0, len = items.length; i < len; i++) {
+				name = items[i].querySelector(".userName > A").textContent;
+				f(name, items[i]);
+			}
+		}
+	};
+	
+	nicomoner.insertRanking();
+	
 	// trigger
-	var url = win.location.href;
-	var trigger = url.replace(/^http:\/\/www\.nicovideo\.jp\/my\/([^\/#\?]+)(\?|#.*)?$/, "$1");
-	todaywatcher[trigger] && todaywatcher[trigger].init();
-	*/
+	var url = window.location.href;
+	var trigger = url.replace(/^http:\/\/www\.nicovideo\.jp\/my\/([^\/#\?]*)(\?|#.*)?$/, "$1");
+	!trigger && (trigger = "top");
+	if (todayWatcher[trigger]) {
+		initializer = (function(win) {
+			var trigger = {
+				html: [],
+				appendTo: []
+			};
+			var fHTML = win.jQuery.fn.html;
+			var fAppendTo = win.jQuery.fn.appendTo;
+			win.jQuery.fn.html = function(s) {
+				if (!arguments.length) {
+					return fHTML.apply(this, arguments);
+				}
+				fHTML.apply(this, arguments);
+				for (var i = 0, len = trigger.html.length; i < len; i++) {
+					trigger.html[i](s);
+				}
+				return this;
+			};
+			win.jQuery.fn.appendTo = function(s) {
+				fAppendTo.apply(this, arguments);
+				for (var i = 0, len = trigger.appendTo.length; i < len; i++) {
+					trigger.appendTo[i](s);
+				}
+				return this;
+			};
+			return {
+				setTrigger: function(type, callback, judge) {
+					!trigger[type] && (trigger[type] = []);
+					trigger[type].push(function(s) {
+						if (judge) {
+							judge(s) && callback();
+						} else {
+							callback();
+						}
+					});
+				}
+			};
+		})(win);
+		todayWatcher[trigger].init();
+	}
+	
 })(window);
