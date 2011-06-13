@@ -2,7 +2,9 @@
 // @name		Nico today Watch
 // @namespace	http://www.atomer.sakuran.ne.jp
 // @description 自分のウォッチリストで現在時間から２４時間以内に更新したユーザーを強調表示する
-// @include		http://www.nicovideo.jp/my/*
+// @include		http://www.nicovideo.jp/my/
+// @include		http://www.nicovideo.jp/my/top
+// @include		http://www.nicovideo.jp/my/watchlist
 // ==/UserScript==
 (function(window, loaded){
 	var win;
@@ -32,31 +34,7 @@
 		}
 	};
 
-	var initializer = (function(win) {
-		var trigger = [];
-		var f = win.jQuery.fn.html;
-		win.jQuery.fn.html = function(s) {
-			if (!arguments.length) {
-				return f.apply(this, arguments);
-			}
-			f.apply(this, arguments);
-			for (var i = 0, len = trigger.length; i < len; i++) {
-			    trigger[i](s);
-			}
-			return this;
-		};
-		return {
-		    setTrigger: function(callback, judge) {
-				trigger.push(function(s) {
-					if (judge) {
-						judge(s) && callback();
-					} else {
-						callback();
-					}
-				});
-		    }
-		};
-	})(win);
+	var initializer;
 	
 	/*
 	 * レポートタイプの取得
@@ -114,7 +92,7 @@
 		},
 		_trigger: function() {
 		    var that = this;
-			initializer.setTrigger(function() {
+			initializer.setTrigger("html", function() {
 				that.em();
 		    }, function(s) {
 				return s.indexOf("myContHead") !== -1;
@@ -166,6 +144,7 @@
 	todayWatcher.top = {
 	    _labelList: [],
 		_filterBase: null,
+		_filterName: "",
 		init: function() {
 			this._trigger();
 			this._getElement();
@@ -176,41 +155,57 @@
 			this._refreshFilter();
 	    },
 		_trigger: function() {
-			initializer.setTrigger();
+			var that = this;
+			initializer.setTrigger("appendTo", function() {
+				that._filter(that._filterName);
+				that._refreshFilter(that._filterName);
+			}, function(s) {
+				if (typeof s === "object" && s.html && s.html().indexOf("SYS_TH_RES_POST_") !== -1) {
+					return true;
+				}
+				return false;
+			});
 	    },
 		_getElement: function() {
 			this._reportList = document.getElementById("SYS_THREADS");
 	    },
 		_attachEvent: function() {
 			var that = this;
-			this._filterBase.addEventListener("click", function(e) {
-				if (e.target.tagName === "A") {
-					var s = e.target.textContent;
-					that._filter(s);
-				}
+			this._filterBase.addEventListener("change", function(e) {
+				var s = that._filterBase.options[that._filterBase.selectedIndex].value;
+				that._filterName = s;
+				that._filter(s);
+				that._filterBase.blur();
 			}, true);
 		},
 		_createFilterBase: function() {
 			var base = document.getElementById("myContBody");
-			var div = document.createElement("ul");
+			var div = document.createElement("div");
+			div.style.textAlign = "right";
+			div.id = "todaywatch_nicorepo_filter";
+			div.innerHTML = '<span>フィルター：</span>';
+			var select = document.createElement("select");
+			div.appendChild(select);
 			base.insertBefore(div, this._reportList);
-			return div;
+			return select;
 		},
-		_refreshFilter: function() {
+		_refreshFilter: function(defName) {
 			var that = this;
 			this._eachItem(function(name, el) {
 				!that._labelList[name] && (that._labelList[name] = true);
 			});
 			
-			var list = [];
+			var list = ['<option value="">フィルター無し</option>'];
 			for (var s in this._labelList) {
-				list.push('<li><a role="button">' + s + '</a></li>');
+				if (this._labelList.hasOwnProperty(s)) {
+					list.push('<option value="' + s + '"' + (defName === s ? ' selected' : '') + '>' + s + '</option>');
+				}
 			}
 			this._filterBase.innerHTML = list.join("");
 	    },
 		_filter: function(s) {
 			this._eachItem(function(name, el) {
-				if (name === s) {
+				if (name === s || s === "") {
 					el.style.display = "block";
 				} else {
 					el.style.display = "none";
@@ -233,6 +228,45 @@
 	var url = window.location.href;
 	var trigger = url.replace(/^http:\/\/www\.nicovideo\.jp\/my\/([^\/#\?]*)(\?|#.*)?$/, "$1");
 	!trigger && (trigger = "top");
-	todayWatcher[trigger] && todayWatcher[trigger].init();
+	if (todayWatcher[trigger]) {
+		initializer = (function(win) {
+			var trigger = {
+				html: [],
+				appendTo: []
+			};
+			var fHTML = win.jQuery.fn.html;
+			var fAppendTo = win.jQuery.fn.appendTo;
+			win.jQuery.fn.html = function(s) {
+				if (!arguments.length) {
+					return fHTML.apply(this, arguments);
+				}
+				fHTML.apply(this, arguments);
+				for (var i = 0, len = trigger.html.length; i < len; i++) {
+					trigger.html[i](s);
+				}
+				return this;
+			};
+			win.jQuery.fn.appendTo = function(s) {
+				fAppendTo.apply(this, arguments);
+				for (var i = 0, len = trigger.appendTo.length; i < len; i++) {
+					trigger.appendTo[i](s);
+				}
+				return this;
+			};
+			return {
+				setTrigger: function(type, callback, judge) {
+					!trigger[type] && (trigger[type] = []);
+					trigger[type].push(function(s) {
+						if (judge) {
+							judge(s) && callback();
+						} else {
+							callback();
+						}
+					});
+				}
+			};
+		})(win);
+		todayWatcher[trigger].init();
+	}
 	
 })(window);
