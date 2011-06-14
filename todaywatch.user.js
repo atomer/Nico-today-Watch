@@ -1,10 +1,8 @@
 // ==UserScript==
 // @name		Nico today Watch
 // @namespace	http://www.atomer.sakuran.ne.jp
-// @description 自分のウォッチリストで現在時間から２４時間以内に更新したユーザーを強調表示する
-// @include		http://www.nicovideo.jp/my/
-// @include		http://www.nicovideo.jp/my/top
-// @include		http://www.nicovideo.jp/my/watchlist
+// @description ニコニコ動画のマイページ拡張（ウォッチリスト内強調表示、ニコレポフィルター）
+// @include		http://www.nicovideo.jp/my/*
 // ==/UserScript==
 (function(window, loaded){
 	var win;
