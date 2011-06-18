@@ -2,7 +2,7 @@
 // @name        Nico today Watch
 // @namespace   http://www.atomer.sakuran.ne.jp
 // @description 自分のウォッチリストで現在時間から２４時間以内に更新したユーザーを強調表示する
-// @include     http://www.nicovideo.jp/my/watchlist
+// @include     http://www.nicovideo.jp/my/watchlist*
 // @version     0.3
 // ==/UserScript==
 (function(window, loaded){
@@ -45,59 +45,132 @@
         }
     }
     
+    var HOURS_24 = 1000 * 60 * 60 * 24,
+        styles = {
+            BASE: "myContBody",
+            ITEM_BG_COLOR: {
+                video: "#FDD",
+                illust: "#9E9",
+                live: "#DDF",
+                mylist: "#FEE4B2",
+                stamp: "#DDD",
+                intro: "#DDD",
+                advert: "#DDD",
+                achiev: "#DDD",
+                none: "#DDD"
+            },
+            DATE_STYLE: {
+                color: "#F33",
+                fontWeight: "bold"
+            },
+            FILTER_BUTTON: "position:absolute;top:5px;right:5px;width:170px;padding:2px;border:1px solid #F33;",
+            FILTER_ON_BUTTON: "text-align:center;background:#F33;color:#FFF",
+            FILTER_OFF_BUTTON: "text-align:center;background:#FFF;color:#F33"
+        },
+        nodes = {
+            WATCH_LIST_ITEM: ".myContList > LI",
+            DATE: ".report > H4 + P + P",
+            CAPTION: ".report > H4 + P"
+        },
+        CSS_VISITED = "http://www.atomer.sakura.ne.jp/js/greasemonkey/todaywatch/override_visited.css",
+        CLASS_NEWER_LIST = "ntw_newer",
+        CLASS_VISITED = "ntw_visited",
+        
+        CLASS_FILTER_BUTTON = "ntw_filter",
+        CLASS_FILTER_ON = "ntw_filter_on",
+        CAPTION_FILTER_ON = "最新更新者のみ表示",
+        CAPTION_FILTER_OFF = "すべて表示する";
+    
     /**
      * today Watch
      * http://www.nicovideo.jp/my/watchlistを拡張
      */
     var todayWatcher = {
-        HOURS_24: 1000 * 60 * 60 * 24,
-        BG_COLOR: {
-            video: "#FDD",
-            illust: "#9E9",
-            live: "#DDF",
-            mylist: "#FEE4B2",
-            stamp: "#DDD",
-            intro: "#DDD",
-            advert: "#DDD",
-            achiev: "#DDD",
-            none: "#DDD"
-        },
-        CSS_VISITED: "http://www.atomer.sakura.ne.jp/js/greasemonkey/todaywatch/override_visited.css",
-        CLASS_VISITED: "ntw_visited",
+        
+        _filtering: false,
+        
         init: function() {
             this._trigger();
+            this._loadStyle();
+        },
+        _loadStyle: function() {
             var style = document.createElement("link");
-            style.setAttribute("href", this.CSS_VISITED);
+            style.setAttribute("href", CSS_VISITED);
             style.setAttribute("type", "text/css");
             style.setAttribute("rel", "stylesheet");
             document.getElementsByTagName("head")[0].appendChild(style);
         },
+        _createSwitch: function(filtering) {
+            var base = document.getElementById(styles.BASE);
+            var target = base.querySelector(".spBox");
+            var div = document.createElement("div");
+            var defClass = CLASS_FILTER_BUTTON;
+            var defStyle = styles.FILTER_BUTTON;
+            var defCaption;
+            if (filtering) {
+                defClass = CLASS_FILTER_BUTTON + " " + CLASS_FILTER_ON;
+                defStyle += styles.FILTER_ON_BUTTON;
+                defCaption = CAPTION_FILTER_OFF;
+            } else {
+                defClass = CLASS_FILTER_BUTTON;
+                defStyle += styles.FILTER_OFF_BUTTON;
+                defCaption = CAPTION_FILTER_ON;
+            }
+            div.setAttribute("style",  defStyle);
+            div.innerHTML = '<a role="button" style="cursor:pointer;display:block;width:100%;height:100%;" class="' + defClass + '">' + defCaption + '</a>';
+            base.insertBefore(div, target);
+            base.parentNode.style.position = "relative";
+            
+            var that = this;
+            
+            base.querySelector("." + CLASS_FILTER_BUTTON).addEventListener("click", function(e) {
+                if (this.className.indexOf(CLASS_FILTER_ON) === -1) {
+                    this.parentNode.setAttribute("style", styles.FILTER_BUTTON + styles.FILTER_ON_BUTTON);
+                    this.textContent = CAPTION_FILTER_OFF;
+                    this.className = CLASS_FILTER_BUTTON + " " + CLASS_FILTER_ON;
+                    that._filtering = true;
+                    that.filter(true);
+                } else {
+                    this.parentNode.setAttribute("style", styles.FILTER_BUTTON + styles.FILTER_OFF_BUTTON);
+                    this.textContent = CAPTION_FILTER_ON;
+                    this.className = CLASS_FILTER_BUTTON;
+                    that._filtering = false;
+                    that.filter(false);
+                }
+            }, false);
+        },
         _trigger: function() {
             var that = this;
             initializer.setTrigger("html", function() {
-                that.em();
+                that._createSwitch(that._filtering);
+                that.em(that._filtering);
             }, function(s) {
                 return s.indexOf("myContHead") !== -1;
             });
         },
-        em: function() {
-            var watchList = document.querySelectorAll(".myContList > LI");
+        em: function(filtering) {
+            var watchList = document.querySelectorAll(nodes.WATCH_LIST_ITEM);
             var day, s, d, cap, t;
             var NOW = +new Date;
+            win.console.log(filtering);
             for (var i = 0, len = watchList.length; i < len; i++) {
-                day = watchList[i].querySelector(".report > H4 + P + P");
+                day = watchList[i].querySelector(nodes.DATE);
                 if (!day) {
+                    filtering && (watchList[i].style.display = "none");
                     continue;
                 }
                 s = day.innerHTML.replace(/^(\d{2})年(\d{2})月(\d{2})日\(.\) (\d{2}):(\d{2})/, "20$1/$2/$3 $4:$5:00");
                 d = new Date(s);
-                if (NOW - d.getTime() < this.HOURS_24) {
-                    cap = watchList[i].querySelector(".report > H4 + P");
+                if (NOW - d.getTime() < HOURS_24) {
+                    watchList[i].className += " " + CLASS_NEWER_LIST;
+                    cap = watchList[i].querySelector(nodes.CAPTION);
                     t = getReportType(cap.textContent);
-                    watchList[i].style.backgroundColor = this.BG_COLOR[t];
-                    day.style.color = "#F33";
-                    day.style.fontWeight = "bold";
+                    watchList[i].style.backgroundColor = styles.ITEM_BG_COLOR[t];
+                    day.style.color = styles.DATE_STYLE.color;
+                    day.style.fontWeight = styles.DATE_STYLE.fontWeight;
                     this.addVisitedStyle(cap, t);
+                } else {
+                    filtering && (watchList[i].style.display = "none");
                 }
             }
         },
@@ -119,7 +192,21 @@
                 target = el.querySelector("A");
             }
             var c = target.className;
-            target.setAttribute("class", c + " " + this.CLASS_VISITED);
+            target.setAttribute("class", c + " " + CLASS_VISITED);
+        },
+        filter: function(filtering) {
+            var watchList, display;
+            if (filtering) {
+                display = "none";
+                watchList = document.querySelectorAll(nodes.WATCH_LIST_ITEM + ":not(." + CLASS_NEWER_LIST + ")");
+            } else {
+                display = "block";
+                watchList = document.querySelectorAll(nodes.WATCH_LIST_ITEM);
+            }
+            var display = filtering ? "none" : "block";
+            for (var i = 0, len = watchList.length; i < len; i++) {
+                watchList[i].style.display = display;
+            }
         }
     };
     
