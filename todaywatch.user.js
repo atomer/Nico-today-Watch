@@ -3,7 +3,7 @@
 // @namespace   http://www.atomer.sakuran.ne.jp
 // @description 自分のウォッチリストで現在時間から２４時間以内に更新したユーザーを強調表示する
 // @include     http://www.nicovideo.jp/my/watchlist*
-// @version     0.3
+// @version     0.4
 // ==/UserScript==
 (function(window, loaded){
     var win;
@@ -28,6 +28,8 @@
             return "video";
         } else if (/^イラスト.+投稿しました。$/.test(s)) {
             return "illust";
+        } else if (/^イラスト.+をクリップしました。$/.test(s)) {
+            return "clip";
         } else if (/開始しました。$/.test(s)) {
             return "live";
         } else if (/マイリスト登録しました。$/.test(s)) {
@@ -53,6 +55,7 @@
                 illust: "#9E9",
                 live: "#DDF",
                 mylist: "#FEE4B2",
+                clip: "#DDD",
                 stamp: "#DDD",
                 intro: "#DDD",
                 advert: "#DDD",
@@ -79,7 +82,9 @@
         CLASS_FILTER_BUTTON = "ntw_filter",
         CLASS_FILTER_ON = "ntw_filter_on",
         CAPTION_FILTER_ON = "最新更新者のみ表示",
-        CAPTION_FILTER_OFF = "すべて表示する";
+        CAPTION_FILTER_OFF = "すべて表示する",
+        
+        SEIGA_URI = "http://lohas.nicoseiga.jp/thumb/${id}i";
     
     /**
      * today Watch
@@ -90,17 +95,17 @@
         _filtering: false,
         
         init: function() {
-            this._trigger();
-            this._loadStyle();
+            this.trigger();
+            this.loadStyle();
         },
-        _loadStyle: function() {
+        loadStyle: function() {
             var style = document.createElement("link");
             style.setAttribute("href", CSS_VISITED);
             style.setAttribute("type", "text/css");
             style.setAttribute("rel", "stylesheet");
             document.getElementsByTagName("head")[0].appendChild(style);
         },
-        _createSwitch: function(filtering) {
+        createSwitch: function(filtering) {
             var base = document.getElementById(styles.BASE);
             var target = base.querySelector(".spBox");
             var div = document.createElement("div");
@@ -139,11 +144,12 @@
                 }
             }, false);
         },
-        _trigger: function() {
+        trigger: function() {
             var that = this;
             initializer.setTrigger("html", function() {
-                that._createSwitch(that._filtering);
+                that.createSwitch(that._filtering);
                 that.em(that._filtering);
+                that.addIllustImage();
             }, function(s) {
                 return s.indexOf("myContHead") !== -1;
             });
@@ -152,7 +158,6 @@
             var watchList = document.querySelectorAll(nodes.WATCH_LIST_ITEM);
             var day, s, d, cap, t;
             var NOW = +new Date;
-            win.console.log(filtering);
             for (var i = 0, len = watchList.length; i < len; i++) {
                 day = watchList[i].querySelector(nodes.DATE);
                 if (!day) {
@@ -206,6 +211,23 @@
             var display = filtering ? "none" : "block";
             for (var i = 0, len = watchList.length; i < len; i++) {
                 watchList[i].style.display = display;
+            }
+        },
+        addIllustImage: function() {
+            var watchList = document.querySelectorAll(nodes.WATCH_LIST_ITEM);
+            var cap, t, report, id, img, a;
+            for (var i = 0, len = watchList.length; i < len; i++) {
+                cap = watchList[i].querySelector(nodes.CAPTION);
+                t = getReportType(cap.textContent);
+                if (t === "illust" || t === "clip") {
+                    a = cap.querySelector("A");
+                    id = a.href.replace(/^.+\/im(\d+)$/, "$1");
+                    var img = document.createElement("img");
+                    img.setAttribute("src", SEIGA_URI.replace("${id}", id));
+                    img.setAttribute("height", "48");
+                    img.setAttribute("style", "margin-left:6px;");
+                    a.appendChild(img);
+                }
             }
         }
     };
