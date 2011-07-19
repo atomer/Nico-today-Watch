@@ -169,6 +169,9 @@
                 if (NOW - d.getTime() < HOURS_24) {
                     watchList[i].className += " " + CLASS_NEWER_LIST;
                     cap = watchList[i].querySelector(nodes.CAPTION);
+                    if (!cap) {
+                        continue;
+                    }
                     t = getReportType(cap.textContent);
                     watchList[i].style.backgroundColor = styles.ITEM_BG_COLOR[t];
                     day.style.color = styles.DATE_STYLE.color;
@@ -218,6 +221,9 @@
             var cap, t, report, id, img, a;
             for (var i = 0, len = watchList.length; i < len; i++) {
                 cap = watchList[i].querySelector(nodes.CAPTION);
+                if (!cap) {
+                    continue;
+                }
                 t = getReportType(cap.textContent);
                 if (t === "illust" || t === "clip") {
                     a = cap.querySelector("A");
