@@ -302,6 +302,7 @@
 					img.setAttribute("src", SEIGA_URI.replace("${id}", id));
 					img.setAttribute("height", "48");
 					img.setAttribute("style", "margin-left:6px;");
+					img.setAttribute("class", "seiga_item");
 					a.appendChild(img);
 				}
 			}
