@@ -3,7 +3,7 @@
 // @namespace   http://www.atomer.sakuran.ne.jp
 // @description 自分のウォッチリストで現在時間から２４時間以内に更新したユーザーを強調表示する
 // @include	 http://www.nicovideo.jp/my/watchlist*
-// @version	 0.6.1
+// @version	 0.6.2
 // ==/UserScript==
 (function(window, loaded){
 	var win;
@@ -229,7 +229,7 @@
 					filtering && (watchList[i].style.display = "none");
 					continue;
 				}
-				s = day.innerHTML.replace(/^(\d{2})年(\d{2})月(\d{2})日\(.\) (\d{2}):(\d{2})/, "20$1/$2/$3 $4:$5:00");
+				s = day.innerHTML.replace(/^(\d{2})年(\d{2})月(\d{2})日\([^ ]+\) (\d{2}):(\d{2})/, "20$1/$2/$3 $4:$5:00");
 				d = new Date(s);
 				if (NOW - d.getTime() < getHours(this._day)) {
 					watchList[i].className += " " + CLASS_NEWER_LIST;
