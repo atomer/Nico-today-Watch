@@ -20,7 +20,7 @@
 	else if @chrome
 		win = window
 	else
-		win = unsafeWindow? or window
+		win = unsafeWindow
 	
 	if /^\/my\/watchlist.*/.test location.pathname
 		sc = document.createElement "script"

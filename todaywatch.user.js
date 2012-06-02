@@ -23,7 +23,7 @@
   } else if (this.chrome) {
     win = window;
   } else {
-    win = (typeof unsafeWindow !== "undefined" && unsafeWindow !== null) || window;
+    win = unsafeWindow;
   }
   if (/^\/my\/watchlist.*/.test(location.pathname)) {
     sc = document.createElement("script");
