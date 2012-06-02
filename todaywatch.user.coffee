@@ -23,10 +23,10 @@
 		win = unsafeWindow? or window
 	
 	if /^\/my\/watchlist.*/.test location.pathname
-		d = document.createElement "script"
-		d.src = "http://userscripts.org/scripts/version/103101/456930.user.js"
-		d.type = "text/javascript"
-		document.body.appendChild d
+		sc = document.createElement "script"
+		sc.src = "https://github.com/atomer/Nico-today-Watch/raw/0.6.3/todaywatch.user.js"
+		sc.type = "text/javascript"
+		document.body.appendChild sc
 		return
 	
 	###
