@@ -12,7 +12,7 @@
 */
 
 (function(window, loaded) {
-  var BEFORE_CLASS_DATA_ATTR, CLASS_NEWER_LIST, CLASS_VISITED, CSS_VISITED, DAY_SET, HOURS_24, d, fn, getHours, getReportType, initializer, nodes, script, styles, todayWatcher, win;
+  var BEFORE_CLASS_DATA_ATTR, CLASS_NEWER_LIST, CLASS_VISITED, CSS_VISITED, DAY_SET, HOURS_24, fn, getHours, getReportType, initializer, nodes, sc, script, styles, todayWatcher, win;
   win = null;
   if (!loaded && this.chrome) {
     fn = '(' + arguments.callee.toString() + ')(this,true);';
@@ -26,10 +26,10 @@
     win = (typeof unsafeWindow !== "undefined" && unsafeWindow !== null) || window;
   }
   if (/^\/my\/watchlist.*/.test(location.pathname)) {
-    d = document.createElement("script");
-    d.src = "http://userscripts.org/scripts/version/103101/456930.user.js";
-    d.type = "text/javascript";
-    document.body.appendChild(d);
+    sc = document.createElement("script");
+    sc.src = "https://github.com/atomer/Nico-today-Watch/raw/0.6.3/todaywatch.user.js";
+    sc.type = "text/javascript";
+    document.body.appendChild(sc);
     return;
   }
   /*
@@ -168,7 +168,7 @@
       });
     },
     em: function(list) {
-      var NOW, beforeClass, cap, day, i, s, t, watchList, _i, _ref;
+      var NOW, beforeClass, cap, d, day, i, s, t, watchList, _i, _ref;
       watchList = list ? list.querySelectorAll(nodes.WATCH_LIST_ITEM) : document.querySelectorAll(nodes.WATCH_LIST_ITEM);
       NOW = +(new Date);
       for (i = _i = 0, _ref = watchList.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
