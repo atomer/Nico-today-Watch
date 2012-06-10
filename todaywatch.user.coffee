@@ -24,7 +24,7 @@
 	
 	if /^\/my\/watchlist.*/.test location.pathname
 		sc = document.createElement "script"
-		sc.src = "https://github.com/atomer/Nico-today-Watch/raw/0.6.3/todaywatch.user.js"
+		sc.src = "https://raw.github.com/atomer/Nico-today-Watch/0.6.3/todaywatch.user.js"
 		sc.type = "text/javascript"
 		document.body.appendChild sc
 		return
