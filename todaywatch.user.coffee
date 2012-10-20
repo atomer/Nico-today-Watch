@@ -6,7 +6,7 @@
 // @include	 http://www.nicovideo.jp/my/top/user
 // @include	 http://www.nicovideo.jp/my/top
 // @include	 http://www.nicovideo.jp/my/watchlist*
-// @version	 0.7.1
+// @version	 0.7.2
 // ==/UserScript==
 ###
 ((window, loaded) ->
@@ -32,7 +32,7 @@
 	###
 	レポートタイプの取得
 	###
-	getReportType = (s) ->
+	getReportType = (s)->
 		s = s.replace /^\s+|\s+$/g, ""
 		# 動画投稿
 		if /動画を投稿しました。$/.test s
@@ -86,7 +86,7 @@
 		WATCH_LIST_ITEM: ".timeline .log"
 		DATE: ".relative"
 		CAPTION: ".log-body"
-	CSS_VISITED = "http://www.atomer.sakura.ne.jp/js/greasemonkey/todaywatch/override_visited.css"
+		DETAIL: ".log-target-info"
 	CLASS_NEWER_LIST = "ntw_newer"
 	CLASS_VISITED = "ntw_visited"
 	
@@ -98,8 +98,18 @@
 		"7": "１週間以内"
 		"31": "１ヶ月以内"
 	
-	getHours = (day) ->
+	getHours = (day)->
 		return day * HOURS_24
+
+	if typeof GM_addStyle is "undefined" then GM_addStyle = (css)->
+		head = document.getElementsByTagName("head")[0]
+		if not head
+			return
+		style = document.createElement("style")
+		style.type = "text/css"
+		style.innerHTML = css
+		head.appendChild(style)
+		return
 	
 	###
 	today Watch
@@ -109,25 +119,21 @@
 		_day: 1
 		_beforeCache: ""
 		
-		init: () ->
+		init: ()->
 			@trigger()
 			@loadStyle()
 			@createSwitch()
 			@em()
-			
 			return
 		
-		loadStyle: () ->
-			style = document.createElement "link"
-			
-			style.setAttribute "href", CSS_VISITED
-			style.setAttribute "type", "text/css"
-			style.setAttribute "rel", "stylesheet"
-			document.getElementsByTagName("head")[0].appendChild style
-			
+		loadStyle: ()->
+			GM_addStyle [
+				".ntw_visited:link {}",
+				".ntw_visited:visited {color: #FFF !important;}"
+			].join("")
 			return
 		
-		_createSelector: (num, selected) ->
+		_createSelector: (num, selected)->
 			selector = ['<select>']
 			
 			if typeof num is "number"
@@ -142,7 +148,7 @@
 			
 			return selector.join ""
 		
-		createSwitch: () ->
+		createSwitch: ()->
 			base = document.querySelector nodes.SWITCH_BASE
 			target = base.querySelector ".a"
 			div = document.createElement "div"
@@ -154,37 +160,33 @@
 			div.setAttribute "style",  styles.COLORING_DAY_SELECTOR
 			selector = @_createSelector DAY_SET, @_day
 			div.innerHTML = selector
-			div.querySelector("SELECT").addEventListener "change", () ->
+			div.querySelector("SELECT").addEventListener "change", ()->
 				that.changeDay(parseInt @value)
 				return
 			, false
 			base.insertBefore div, target
-			
 			return
 		
-		changeDay: (day) ->
+		changeDay: (day)->
 			ul = document.querySelector ".timeline"
 			@_day = day
 			@em()
-			
 			return
 		
-		trigger: () ->
+		trigger: ()->
 			that = @
-			
 			initializer.setTrigger "append", (list) ->
 				that.em list[0]
 				return
-			, (list) ->
+			, (list)->
 				return not not list.selector
-			
 			return
 		
-		em: (list) ->
+		em: (list)->
 			watchList = if list then list.querySelectorAll nodes.WATCH_LIST_ITEM else document.querySelectorAll nodes.WATCH_LIST_ITEM
-			NOW = +new Date
+			NOW = +new Date()
 			
-			for i in [0...watchList.length]
+			for v,i in watchList
 				day = watchList[i].querySelector nodes.DATE
 				if not day
 					continue
@@ -204,15 +206,18 @@
 					
 					# 更新のタイプを見てリストアイテムのバックグラウンドカラー変更
 					cap = watchList[i].querySelector nodes.CAPTION
+					det = watchList[i].querySelector nodes.DETAIL
 					if cap
 						t = getReportType cap.textContent
 						watchList[i].style.backgroundColor = styles.ITEM_BG_COLOR[t]
 						day.style.fontWeight = styles.DATE_STYLE.fontWeight
 						@addVisitedStyle cap, t
+					if det
+						@addVisitedStyle det, t
 				else
 					# スタイルを元に戻す
 					beforeClass = watchList[i].getAttribute BEFORE_CLASS_DATA_ATTR
-					beforeClass and watchList[i].className = beforeClass
+					if beforeClass then watchList[i].className = beforeClass
 					watchList[i].removeAttribute BEFORE_CLASS_DATA_ATTR
 					
 					cap = watchList[i].querySelector nodes.CAPTION
@@ -222,10 +227,10 @@
 			
 			return
 		
-		addVisitedStyle: (el, type) ->
+		addVisitedStyle: (el, type)->
 			if type is "live"
 				as = el.querySelectorAll "A"
-				for i in [0...as.length]
+				for v,i in as
 					if not as[i].getAttribute "title"
 						target = as[i]
 						break
@@ -238,26 +243,26 @@
 			
 			return
 	
-	initializer = ((win) ->
+	initializer = ((win)->
 		trigger =
 			append: []
 		fAppend = win.jQuery.fn.append
 		
-		win.jQuery.fn.append = (s) ->
+		win.jQuery.fn.append = (s)->
 			if not arguments.length
 				return fAppend.apply @, arguments
 			fAppend.apply @, arguments
-			for i in [0...trigger.append.length]
+			for v,i in trigger.append
 				trigger.append[i] s
 			
 			return @
 		
 		return {
-			setTrigger: (type, callback, judge) ->
-				not trigger[type] and trigger[type] = []
+			setTrigger: (type, callback, judge)->
+				if not trigger[type] then trigger[type] = []
 				trigger[type].push (s) ->
 					if judge
-						judge(s) and callback.apply null, arguments
+						if judge(s) then callback.apply null, arguments
 					else
 						callback.apply null, arguments
 					return

@@ -7,12 +7,12 @@
 // @include	 http://www.nicovideo.jp/my/top/user
 // @include	 http://www.nicovideo.jp/my/top
 // @include	 http://www.nicovideo.jp/my/watchlist*
-// @version	 0.7.1
+// @version	 0.7.2
 // ==/UserScript==
 */
 
 (function(window, loaded) {
-  var BEFORE_CLASS_DATA_ATTR, CLASS_NEWER_LIST, CLASS_VISITED, CSS_VISITED, DAY_SET, HOURS_24, fn, getHours, getReportType, initializer, nodes, sc, script, styles, todayWatcher, win;
+  var BEFORE_CLASS_DATA_ATTR, CLASS_NEWER_LIST, CLASS_VISITED, DAY_SET, GM_addStyle, HOURS_24, fn, getHours, getReportType, initializer, nodes, sc, script, styles, todayWatcher, win;
   win = null;
   if (!loaded && this.chrome) {
     fn = '(' + arguments.callee.toString() + ')(this,true);';
@@ -83,9 +83,9 @@
     SWITCH_BASE: "#nicorepo > H3",
     WATCH_LIST_ITEM: ".timeline .log",
     DATE: ".relative",
-    CAPTION: ".log-body"
+    CAPTION: ".log-body",
+    DETAIL: ".log-target-info"
   };
-  CSS_VISITED = "http://www.atomer.sakura.ne.jp/js/greasemonkey/todaywatch/override_visited.css";
   CLASS_NEWER_LIST = "ntw_newer";
   CLASS_VISITED = "ntw_visited";
   BEFORE_CLASS_DATA_ATTR = "data-nicotodaywatch-beforeclass";
@@ -98,6 +98,19 @@
   getHours = function(day) {
     return day * HOURS_24;
   };
+  if (typeof GM_addStyle === "undefined") {
+    GM_addStyle = function(css) {
+      var head, style;
+      head = document.getElementsByTagName("head")[0];
+      if (!head) {
+        return;
+      }
+      style = document.createElement("style");
+      style.type = "text/css";
+      style.innerHTML = css;
+      head.appendChild(style);
+    };
+  }
   /*
   	today Watch
   	http://www.nicovideo.jp/my/watchlistを拡張
@@ -113,12 +126,7 @@
       this.em();
     },
     loadStyle: function() {
-      var style;
-      style = document.createElement("link");
-      style.setAttribute("href", CSS_VISITED);
-      style.setAttribute("type", "text/css");
-      style.setAttribute("rel", "stylesheet");
-      document.getElementsByTagName("head")[0].appendChild(style);
+      GM_addStyle([".ntw_visited:link {}", ".ntw_visited:visited {color: #FFF !important;}"].join(""));
     },
     _createSelector: function(num, selected) {
       var i, n, selector, val, _i;
@@ -168,10 +176,11 @@
       });
     },
     em: function(list) {
-      var NOW, beforeClass, cap, d, day, i, s, t, watchList, _i, _ref;
+      var NOW, beforeClass, cap, d, day, det, i, s, t, v, watchList, _i, _len;
       watchList = list ? list.querySelectorAll(nodes.WATCH_LIST_ITEM) : document.querySelectorAll(nodes.WATCH_LIST_ITEM);
-      NOW = +(new Date);
-      for (i = _i = 0, _ref = watchList.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+      NOW = +new Date();
+      for (i = _i = 0, _len = watchList.length; _i < _len; i = ++_i) {
+        v = watchList[i];
         day = watchList[i].querySelector(nodes.DATE);
         if (!day) {
           continue;
@@ -186,15 +195,21 @@
           watchList[i].setAttribute(BEFORE_CLASS_DATA_ATTR, beforeClass);
           watchList[i].className = beforeClass + " " + CLASS_NEWER_LIST;
           cap = watchList[i].querySelector(nodes.CAPTION);
+          det = watchList[i].querySelector(nodes.DETAIL);
           if (cap) {
             t = getReportType(cap.textContent);
             watchList[i].style.backgroundColor = styles.ITEM_BG_COLOR[t];
             day.style.fontWeight = styles.DATE_STYLE.fontWeight;
             this.addVisitedStyle(cap, t);
           }
+          if (det) {
+            this.addVisitedStyle(det, t);
+          }
         } else {
           beforeClass = watchList[i].getAttribute(BEFORE_CLASS_DATA_ATTR);
-          beforeClass && (watchList[i].className = beforeClass);
+          if (beforeClass) {
+            watchList[i].className = beforeClass;
+          }
           watchList[i].removeAttribute(BEFORE_CLASS_DATA_ATTR);
           cap = watchList[i].querySelector(nodes.CAPTION);
           if (cap) {
@@ -205,10 +220,11 @@
       }
     },
     addVisitedStyle: function(el, type) {
-      var as, c, i, target, _i, _ref;
+      var as, c, i, target, v, _i, _len;
       if (type === "live") {
         as = el.querySelectorAll("A");
-        for (i = _i = 0, _ref = as.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+        for (i = _i = 0, _len = as.length; _i < _len; i = ++_i) {
+          v = as[i];
           if (!as[i].getAttribute("title")) {
             target = as[i];
             break;
@@ -231,22 +247,28 @@
     };
     fAppend = win.jQuery.fn.append;
     win.jQuery.fn.append = function(s) {
-      var i, _i, _ref;
+      var i, v, _i, _len, _ref;
       if (!arguments.length) {
         return fAppend.apply(this, arguments);
       }
       fAppend.apply(this, arguments);
-      for (i = _i = 0, _ref = trigger.append.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+      _ref = trigger.append;
+      for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+        v = _ref[i];
         trigger.append[i](s);
       }
       return this;
     };
     return {
       setTrigger: function(type, callback, judge) {
-        !trigger[type] && (trigger[type] = []);
+        if (!trigger[type]) {
+          trigger[type] = [];
+        }
         trigger[type].push(function(s) {
           if (judge) {
-            judge(s) && callback.apply(null, arguments);
+            if (judge(s)) {
+              callback.apply(null, arguments);
+            }
           } else {
             callback.apply(null, arguments);
           }
