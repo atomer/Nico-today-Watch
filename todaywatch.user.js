@@ -77,7 +77,7 @@
     DATE_STYLE: {
       fontWeight: "bold"
     },
-    COLORING_DAY_SELECTOR: "position:absolute;top:5px;right:185px;width:100px;"
+    COLORING_DAY_SELECTOR: "position:absolute;top:5px;right:5px;width:100px;"
   };
   nodes = {
     SWITCH_BASE: "#nicorepo > H3",
