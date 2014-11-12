@@ -6,21 +6,19 @@
 // @include	 http://www.nicovideo.jp/my/top/user
 // @include	 http://www.nicovideo.jp/my/top
 // @include	 http://www.nicovideo.jp/my/watchlist*
-// @version	 0.7.2
+// @version	 0.7.3
 // ==/UserScript==
 ###
 ((window, loaded) ->
 	win = null
-	if not loaded and @chrome
+	if not loaded
 		fn = '(' + arguments.callee.toString() + ')(this,true);'
 		script = document.createElement "script"
 		script.appendChild(document.createTextNode fn)
 		document.body.appendChild script
 		return
-	else if @chrome
-		win = window
 	else
-		win = unsafeWindow
+		win = window
 	
 	if /^\/my\/watchlist.*/.test location.pathname
 		sc = document.createElement "script"
