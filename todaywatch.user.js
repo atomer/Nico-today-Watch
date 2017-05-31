@@ -90,7 +90,7 @@
     let nodes = {
         SWITCH_BASE: "#nicorepo > H3",
         WATCH_LIST_ITEM: ".timeline .log",
-        DATE: ".relative",
+        DATE: ".log-footer-date time",
         CAPTION: ".log-body",
         DETAIL: ".log-target-info"
     };
