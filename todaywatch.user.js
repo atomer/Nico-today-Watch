@@ -2,11 +2,11 @@
 // @name        Nico today Watch
 // @namespace   https://github.com/atomer/Nico-today-Watch
 // @description 自分のウォッチリストで現在時間から指定時間以内に更新したユーザーを強調表示する
-// @include     http://www.nicovideo.jp/my/top/user
-// @include     http://www.nicovideo.jp/my/top
-// @include     http://www.nicovideo.jp/my/watchlist*
+// @include     https://www.nicovideo.jp/my/top/user
+// @include     https://www.nicovideo.jp/my/top
+// @include     https://www.nicovideo.jp/my/watchlist*
 // @grant       GM_addStyle
-// @version     0.9.0
+// @version     0.9.1
 // ==/UserScript==
     
 /*
