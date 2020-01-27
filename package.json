@@ -1,0 +1,24 @@
+{
+  "name": "nico-today-watch",
+  "version": "1.0.0",
+  "description": "自分のウォッチリストで現在時間から指定時間以内に更新したユーザーを強調表示する",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atomer/Nico-today-Watch.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/atomer/Nico-today-Watch/issues"
+  },
+  "homepage": "https://github.com/atomer/Nico-today-Watch#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10"
+  }
+}
