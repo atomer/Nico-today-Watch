@@ -26,11 +26,10 @@ export default class {
     this.el = el;
   }
 
-  updateEmphasis(day: number) {
-    const watchList: NodeList = this.el.querySelectorAll(".timeline .log");
+  updateEmphasis(day: number, list: NodeList | void) {
     const now: number = +new Date();
 
-    this.el.querySelectorAll(".timeline .log").forEach((v: HTMLElement) => {
+    (list || this.el.querySelectorAll(".timeline .log")).forEach((v: HTMLElement) => {
       const time: HTMLElement = v.querySelector(".log-footer-date time");
       if (!time) {
         return;

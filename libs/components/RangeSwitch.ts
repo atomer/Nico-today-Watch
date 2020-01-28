@@ -9,19 +9,17 @@ const DAY_SET = {
   "31": "１ヶ月以内"
 };
 
-export default class {
+export default class extends EventTarget {
   value: number;
+  el: HTMLElement;
 
-  constructor(options: Options) {
-    const base: HTMLElement = document.querySelector(options.switchBase);
-    const target: HTMLElement = base.querySelector(".a");
-    const div: HTMLElement = document.createElement("div");
-    base.parentNode.style.position = "relative";
-
-    div.setAttribute("style", "position:absolute;top:5px;right:5px;width:100px;");
+  constructor() {
+    super();
+    this.el = document.createElement("div");
+    this.el.setAttribute("style", "position:absolute;top:5px;right:5px;width:100px;");
     const selector: string = createSelectorString(DAY_SET, 1);
-    div.innerHTML = selector;
-    const select: HTMLSelectElement = div.querySelector("SELECT");
+    this.el.innerHTML = selector;
+    const select: HTMLSelectElement = this.el.querySelector("SELECT");
     select.addEventListener("change", () => {
       this.value = parseInt(select.value, 10);
       const event: CustomEvent = new CustomEvent("change", {
@@ -29,7 +27,6 @@ export default class {
       });
       this.dispatchEvent(event);
     }, false);
-    base.insertBefore(div, target);
   }
 }
 
@@ -37,7 +34,7 @@ interface Options {
   switchBase: string;
 }
 
-function createSelectorString(num: number | {}, selected: boolean | string): string {
+function createSelectorString(num: number | {}, selected: boolean | string | number): string {
   const selector: string[] = ['<select>'];
 
   if (typeof num === "number") {

@@ -3,12 +3,16 @@ import NicoReport from './components/NicoReport';
 import RangeSwitch from './components/RangeSwitch';
 
 const base: Base = new Base();
-const nicoReport: NicoReport = new NicoReport();
+const nicoReport: NicoReport = new NicoReport(document.body);
 const rangeSwitch: RangeSwitch = new RangeSwitch();
 
-base.addEventListener('update', () => {
-  nicoReport.updateEmphasis(rangeSwitch.value);
+base.addEventListener('update', (e: CustomEvent) => {
+  nicoReport.updateEmphasis(rangeSwitch.value, e.detail);
 });
-rangeSwitch.addEventListener('change', (day: number) => {
-  nicoReport.updateEmphasis(day);
+rangeSwitch.addEventListener('change', (e: CustomEvent) => {
+  nicoReport.updateEmphasis(e.detail);
 });
+
+base.insertRangeSwitch(rangeSwitch.el);
+
+nicoReport.updateEmphasis(rangeSwitch.value);
