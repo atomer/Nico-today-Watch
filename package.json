@@ -23,5 +23,15 @@
     "typescript": "^3.7.5",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"
+  },
+  "meta": {
+    "name": "Nico today Watch",
+    "namespace": "https://github.com/atomer/Nico-today-Watch",
+    "includes": [
+      "https://www.nicovideo.jp/my/top/user",
+      "https://www.nicovideo.jp/my/top",
+      "https://www.nicovideo.jp/my/watchlist*"
+    ],
+    "grant": "GM_addStyle"
   }
 }
