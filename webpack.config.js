@@ -4,7 +4,6 @@ const package = require('./package.json');
 
 module.exports = {
   mode: 'production',
-  devtool: 'source-map',
   resolve: {
     extensions: ['.ts', '.tsx']
   },
@@ -18,11 +17,6 @@ module.exports = {
             loader: "ts-loader"
           }
         ]
-      },
-      {
-        enforce: "pre",
-        test: /\.js$/,
-        loader: "source-map-loader"
       }
     ]
   },
