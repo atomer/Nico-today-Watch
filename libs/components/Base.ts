@@ -1,6 +1,7 @@
+import OrigEventTarget from '../utils/OrigEventTarget';
 import RangeSwitch from "./RangeSwitch";
 
-export default class extends EventTarget {
+export default class extends OrigEventTarget {
   switchBase: HTMLElement;
   switchBaseTarget: HTMLElement;
 
@@ -28,7 +29,7 @@ export default class extends EventTarget {
   trigger() {
     let isInit: boolean = false;
     setTrigger("#MyPageNicorepoApp", () => {
-      const timeline: HTMLElement = document.querySelector(".timeline .log");
+      const timeline: HTMLElement = document.querySelector(".NicorepoTimeline.timeline");
       if (!isInit && timeline) {
         const event: CustomEvent = new CustomEvent("update", {
           detail: timeline.childNodes

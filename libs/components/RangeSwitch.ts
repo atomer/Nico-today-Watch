@@ -1,3 +1,5 @@
+import OrigEventTarget from '../utils/OrigEventTarget';
+
 const DAY_SET = {
   "1": "1日以内",
   "2": "2日以内",
@@ -9,15 +11,15 @@ const DAY_SET = {
   "31": "１ヶ月以内"
 };
 
-export default class extends EventTarget {
-  value: number;
+export default class extends OrigEventTarget {
+  value: number = 1;
   el: HTMLElement;
 
   constructor() {
     super();
     this.el = document.createElement("div");
     this.el.setAttribute("style", "position:absolute;top:5px;right:5px;width:100px;");
-    const selector: string = createSelectorString(DAY_SET, 1);
+    const selector: string = createSelectorString(DAY_SET, this.value);
     this.el.innerHTML = selector;
     const select: HTMLSelectElement = this.el.querySelector("SELECT");
     select.addEventListener("change", () => {
