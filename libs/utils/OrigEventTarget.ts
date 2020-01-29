@@ -7,7 +7,7 @@ export default class {
 
   addEventListener(type: string, callback: Function) {
     if (!(type in this.listeners)) {
-        this.listeners[type] = [];
+      this.listeners[type] = [];
     }
     this.listeners[type].push(callback);
   }
@@ -18,7 +18,7 @@ export default class {
     }
     const stack: Function[] = this.listeners[type];
     for (let i = 0, l = stack.length; i < l; i++) {
-      if (stack[i] === callback){
+      if (stack[i] === callback) {
         stack.splice(i, 1);
         return;
       }
